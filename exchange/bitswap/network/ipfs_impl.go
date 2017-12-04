@@ -7,8 +7,9 @@ import (
 	"time"
 
 	bsmsg "github.com/ipfs/go-ipfs/exchange/bitswap/message"
+	providers "github.com/ipfs/go-ipfs/providers"
 
-	routing "gx/ipfs/QmPR2JzfKd9poHx9XBhzoFeBBC31ZM3W5iUPKJZWyaoZZm/go-libp2p-routing"
+	cid "gx/ipfs/QmNp85zy9RLrQ5oQD4hPyS39ezrrXpcaa7R4Y9kxdWQLLQ/go-cid"
 	pstore "gx/ipfs/QmPgDWmTmuzvP7QE5zwo1TmjbJme9pmZHNujB2453jkCTr/go-libp2p-peerstore"
 	host "gx/ipfs/QmRS46AyqtpJBsf1zmQdeizSDEzo1qkWR7rdEuPFAv8237/go-libp2p-host"
 	logging "gx/ipfs/QmSpJByNKFX1sCsHBEp3R73FL4NF6FnQTEGyNAXHm2GS52/go-log"
@@ -24,10 +25,10 @@ var log = logging.Logger("bitswap_network")
 var sendMessageTimeout = time.Minute * 10
 
 // NewFromIpfsHost returns a BitSwapNetwork supported by underlying IPFS host
-func NewFromIpfsHost(host host.Host, r routing.ContentRouting) BitSwapNetwork {
+func NewFromIpfsHost(host host.Host, p providers.Interface) BitSwapNetwork {
 	bitswapNetwork := impl{
-		host:    host,
-		routing: r,
+		host:      host,
+		providers: p,
 	}
 	host.SetStreamHandler(ProtocolBitswap, bitswapNetwork.handleNewStream)
 	host.SetStreamHandler(ProtocolBitswapOne, bitswapNetwork.handleNewStream)
@@ -41,8 +42,8 @@ func NewFromIpfsHost(host host.Host, r routing.ContentRouting) BitSwapNetwork {
 // impl transforms the ipfs network interface, which sends and receives
 // NetMessage objects, into the bitswap network interface.
 type impl struct {
-	host    host.Host
-	routing routing.ContentRouting
+	host      host.Host
+	providers providers.Interface
 
 	// inbound messages from the network are forwarded to the receiver
 	receiver Receiver
@@ -161,6 +162,19 @@ func (bsnet *impl) handleNewStream(s inet.Stream) {
 		log.Debugf("bitswap net handleNewStream from %s", s.Conn().RemotePeer())
 		bsnet.receiver.ReceiveMessage(ctx, p, received)
 	}
+}
+
+// FindProvidersAsync returns a channel of providers for the given key
+func (bsnet *impl) FindProvidersAsync(ctx context.Context, k *cid.Cid, max int) <-chan peer.ID {
+	return bsnet.providers.FindProvidersAsync(ctx, k, max)
+}
+
+func (bsnet *impl) FindProviders(ctx context.Context, k *cid.Cid) error {
+	return bsnet.providers.FindProviders(ctx, k)
+}
+
+func (bsnet *impl) Provide(ctx context.Context, k *cid.Cid) error {
+	return bsnet.providers.Provide(k)
 }
 
 func (bsnet *impl) ConnectionManager() ifconnmgr.ConnManager {

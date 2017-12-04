@@ -308,7 +308,7 @@ func Add(n *core.IpfsNode, r io.Reader) (string, error) {
 func AddWithContext(ctx context.Context, n *core.IpfsNode, r io.Reader) (string, error) {
 	defer n.Blockstore.PinLock().Unlock()
 
-	fileAdder, err := NewAdder(ctx, n.Pinning, n.Blockstore, n.DAG, n.Providers)
+	fileAdder, err := NewAdder(ctx, n.Pinning, n.Blockstore, n.DAG)
 	if err != nil {
 		return "", err
 	}

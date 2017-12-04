@@ -8,7 +8,6 @@ import (
 	"time"
 
 	dag "github.com/ipfs/go-ipfs/merkledag"
-	providers "github.com/ipfs/go-ipfs/providers"
 
 	cid "gx/ipfs/QmNp85zy9RLrQ5oQD4hPyS39ezrrXpcaa7R4Y9kxdWQLLQ/go-cid"
 	node "gx/ipfs/QmPN7cwmpcc4DWXb4KTB9dNAJgjuPY69h3npsMfhRrQL9c/go-ipld-format"
@@ -36,8 +35,7 @@ func (e ErrNoLink) Error() string {
 // TODO: now that this is more modular, try to unify this code with the
 //       the resolvers in namesys
 type Resolver struct {
-	DAG  dag.DAGService
-	prov providers.Interface
+	DAG dag.DAGService
 
 	ResolveOnce func(ctx context.Context, ds dag.DAGService, nd node.Node, names []string) (*node.Link, []string, error)
 }

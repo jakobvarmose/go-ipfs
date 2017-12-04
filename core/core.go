@@ -452,7 +452,7 @@ func (n *IpfsNode) startOnlineServicesWithHost(ctx context.Context, host p2phost
 
 	// setup exchange service
 	const alwaysSendToPeer = true // use YesManStrategy
-	bitswapNetwork := bsnet.NewFromIpfsHost(n.PeerHost, n.Routing)
+	bitswapNetwork := bsnet.NewFromIpfsHost(n.PeerHost, n.Providers)
 	n.Exchange = bitswap.New(ctx, n.Identity, bitswapNetwork, n.Blockstore, alwaysSendToPeer)
 
 	size, err := n.getCacheSize()

@@ -16,7 +16,7 @@ import (
 	bsmsg "github.com/ipfs/go-ipfs/exchange/bitswap/message"
 	bsnet "github.com/ipfs/go-ipfs/exchange/bitswap/network"
 	notifications "github.com/ipfs/go-ipfs/exchange/bitswap/notifications"
-	"github.com/ipfs/go-ipfs/thirdparty/delay"
+	delay "github.com/ipfs/go-ipfs/thirdparty/delay"
 
 	cid "gx/ipfs/QmNp85zy9RLrQ5oQD4hPyS39ezrrXpcaa7R4Y9kxdWQLLQ/go-cid"
 	metrics "gx/ipfs/QmRg1gKTHzc3CZXSKzem8aR4E3TubFhbgXwfVuWnSK5CC5/go-metrics-interface"
@@ -25,8 +25,6 @@ import (
 	blocks "gx/ipfs/QmSn9Td7xgxm9EV7iEjTckpUWmWApggzPxu7eFGWkkpwin/go-block-format"
 	logging "gx/ipfs/QmSpJByNKFX1sCsHBEp3R73FL4NF6FnQTEGyNAXHm2GS52/go-log"
 	peer "gx/ipfs/QmXYjuNuxVzXKJCfWasQk1RqkhVLDM9jtUKhqc2WPQmFSB/go-libp2p-peer"
-
-	"github.com/ipfs/go-ipfs/providers"
 )
 
 var log = logging.Logger("bitswap")
@@ -48,7 +46,7 @@ var rebroadcastDelay = delay.Fixed(time.Minute)
 // delegate.
 // Runs until context is cancelled.
 func New(parent context.Context, p peer.ID, network bsnet.BitSwapNetwork,
-	bstore blockstore.Blockstore, providers providers.Interface, nice bool) exchange.Interface {
+	bstore blockstore.Blockstore, nice bool) exchange.Interface {
 
 	// important to use provided parent context (since it may include important
 	// loggable data). It's probably not a good idea to allow bitswap to be
@@ -72,7 +70,6 @@ func New(parent context.Context, p peer.ID, network bsnet.BitSwapNetwork,
 
 	bs := &Bitswap{
 		blockstore:    bstore,
-		providers:     providers,
 		notifications: notif,
 		engine:        decision.NewEngine(ctx, bstore), // TODO close the engine with Close() method
 		network:       network,
@@ -115,9 +112,6 @@ type Bitswap struct {
 	// blockstore is the local database
 	// NB: ensure threadsafety
 	blockstore blockstore.Blockstore
-
-	// providers implement content routing logic
-	providers providers.Interface
 
 	// notifications engine for receiving new blocks and routing them to the
 	// appropriate user requests
@@ -235,7 +229,7 @@ func (bs *Bitswap) GetBlocks(ctx context.Context, keys []*cid.Cid) (<-chan block
 	// NB: Optimization. Assumes that providers of key[0] are likely to
 	// be able to provide for all keys. This currently holds true in most
 	// every situation. Later, this assumption may not hold as true.
-	if err := bs.providers.FindProviders(ctx, keys[0]); err != nil {
+	if err := bs.network.FindProviders(ctx, keys[0]); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -350,7 +344,7 @@ func (bs *Bitswap) ReceiveMessage(ctx context.Context, p peer.ID, incoming bsmsg
 			if err := bs.receiveBlockFrom(b, p); err != nil {
 				log.Warningf("ReceiveMessage recvBlockFrom error: %s", err)
 			}
-			if err := bs.providers.Provide(b.Cid()); err != nil {
+			if err := bs.network.Provide(ctx, b.Cid()); err != nil {
 				log.Warningf("ReceiveMessage Provide error: %s", err)
 			}
 			log.Event(ctx, "Bitswap.GetBlockRequest.End", b.Cid())
