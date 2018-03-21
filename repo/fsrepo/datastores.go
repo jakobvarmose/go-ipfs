@@ -14,7 +14,7 @@ import (
 	measure "github.com/ipfs/go-ds-measure"
 
 	ds "github.com/ipfs/go-datastore"
-	mount "github.com/ipfs/go-datastore/syncmount"
+	mount "github.com/ipfs/go-datastore/mount"
 
 	humanize "github.com/dustin/go-humanize"
 	badgerds "github.com/ipfs/go-ds-badger"

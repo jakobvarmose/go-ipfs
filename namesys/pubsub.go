@@ -150,10 +150,7 @@ func (p *PubsubPublisher) publishRecord(ctx context.Context, k ci.PrivKey, value
 
 	// the datastore is shared with the routing publisher to properly increment and persist
 	// ipns record sequence numbers; so we need to Record our new entry in the datastore
-	dsrec, err := record.MakePutRecord(k, ipnskey, data, true)
-	if err != nil {
-		return err
-	}
+	dsrec := record.MakePutRecord(ipnskey, data)
 
 	dsdata, err := proto.Marshal(dsrec)
 	if err != nil {
