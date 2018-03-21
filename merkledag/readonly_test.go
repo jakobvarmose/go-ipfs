@@ -7,8 +7,8 @@ import (
 	. "github.com/ipfs/go-ipfs/merkledag"
 	dstest "github.com/ipfs/go-ipfs/merkledag/test"
 
-	cid "gx/ipfs/QmcZfnkapfECQGcLZaf9B79NRg7cRa9EnZh4LSbkCzwNvY/go-cid"
-	ipld "gx/ipfs/Qme5bWv7wtjUNGsK2BNGVUFPKiuxWrsqrtvYwCLRw8YFES/go-ipld-format"
+	cid "github.com/ipfs/go-cid"
+	ipld "github.com/ipfs/go-ipld-format"
 )
 
 func TestReadonlyProperties(t *testing.T) {

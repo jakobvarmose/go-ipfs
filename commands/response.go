@@ -3,7 +3,7 @@ package commands
 import (
 	"io"
 
-	cmdkit "gx/ipfs/QmceUdzxkimdYsgtX733uNgzf1DLHyBKN6ehGSp85ayppM/go-ipfs-cmdkit"
+	cmdkit "github.com/ipfs/go-ipfs-cmdkit"
 )
 
 // ErrorType signfies a category of errors

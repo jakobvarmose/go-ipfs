@@ -12,7 +12,7 @@ import (
 	path "github.com/ipfs/go-ipfs/path"
 	tar "github.com/ipfs/go-ipfs/tar"
 
-	"gx/ipfs/QmceUdzxkimdYsgtX733uNgzf1DLHyBKN6ehGSp85ayppM/go-ipfs-cmdkit"
+	"github.com/ipfs/go-ipfs-cmdkit"
 )
 
 var TarCmd = &cmds.Command{

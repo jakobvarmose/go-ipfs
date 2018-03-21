@@ -11,8 +11,8 @@ import (
 	cmds "github.com/ipfs/go-ipfs/commands"
 	core "github.com/ipfs/go-ipfs/core"
 
-	ma "gx/ipfs/QmWWQ2Txc2c6tqjsBpzg5Ar652cHPGNsQQp2SejkNmkUMb/go-multiaddr"
-	"gx/ipfs/QmceUdzxkimdYsgtX733uNgzf1DLHyBKN6ehGSp85ayppM/go-ipfs-cmdkit"
+	"github.com/ipfs/go-ipfs-cmdkit"
+	ma "github.com/multiformats/go-multiaddr"
 )
 
 // P2PListenerInfoOutput is output type of ls command

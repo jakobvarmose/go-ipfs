@@ -10,7 +10,7 @@ import (
 	ns "github.com/ipfs/go-ipfs/namesys"
 	path "github.com/ipfs/go-ipfs/path"
 
-	"gx/ipfs/QmceUdzxkimdYsgtX733uNgzf1DLHyBKN6ehGSp85ayppM/go-ipfs-cmdkit"
+	"github.com/ipfs/go-ipfs-cmdkit"
 )
 
 type ResolvedPath struct {

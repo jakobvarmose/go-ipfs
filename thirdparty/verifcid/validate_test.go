@@ -3,9 +3,9 @@ package verifcid
 import (
 	"testing"
 
-	mh "gx/ipfs/QmZyZDi491cCNTLfAhwcaDii2Kg4pwKRkhqQzURGDvY6ua/go-multihash"
+	mh "github.com/multiformats/go-multihash"
 
-	cid "gx/ipfs/QmcZfnkapfECQGcLZaf9B79NRg7cRa9EnZh4LSbkCzwNvY/go-cid"
+	cid "github.com/ipfs/go-cid"
 )
 
 func TestValidateCids(t *testing.T) {

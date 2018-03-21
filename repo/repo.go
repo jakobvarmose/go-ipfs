@@ -8,8 +8,8 @@ import (
 	keystore "github.com/ipfs/go-ipfs/keystore"
 	config "github.com/ipfs/go-ipfs/repo/config"
 
-	ds "gx/ipfs/QmPpegoMqhAEqjncrzArm7KVWAkCm78rqL2DPuNjhPrshg/go-datastore"
-	ma "gx/ipfs/QmWWQ2Txc2c6tqjsBpzg5Ar652cHPGNsQQp2SejkNmkUMb/go-multiaddr"
+	ds "github.com/ipfs/go-datastore"
+	ma "github.com/multiformats/go-multiaddr"
 )
 
 var (

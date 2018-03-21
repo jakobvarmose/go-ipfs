@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	chunker "gx/ipfs/QmWo8jYc19ppG7YoTsrr2kEtLRbARTJho5oNXFTR6B7Peq/go-ipfs-chunker"
-	"gx/ipfs/QmceUdzxkimdYsgtX733uNgzf1DLHyBKN6ehGSp85ayppM/go-ipfs-cmdkit/files"
-	ipld "gx/ipfs/Qme5bWv7wtjUNGsK2BNGVUFPKiuxWrsqrtvYwCLRw8YFES/go-ipld-format"
+	chunker "github.com/ipfs/go-ipfs-chunker"
+	"github.com/ipfs/go-ipfs-cmdkit/files"
+	ipld "github.com/ipfs/go-ipld-format"
 
 	bal "github.com/ipfs/go-ipfs/importer/balanced"
 	h "github.com/ipfs/go-ipfs/importer/helpers"

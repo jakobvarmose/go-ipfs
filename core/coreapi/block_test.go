@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	mh "gx/ipfs/QmZyZDi491cCNTLfAhwcaDii2Kg4pwKRkhqQzURGDvY6ua/go-multihash"
+	mh "github.com/multiformats/go-multihash"
 )
 
 func TestBlockPut(t *testing.T) {
