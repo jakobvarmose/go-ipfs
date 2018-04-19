@@ -17,6 +17,8 @@ import (
 	cmds "gx/ipfs/QmfAkMSt9Fwzk48QDJecPcwCUjnf2uG7MLnmCGTp4C6ouL/go-ipfs-cmds"
 )
 
+// TODO implement encryption here (this is probably hard)
+
 var FileStoreCmd = &cmds.Command{
 	Helptext: cmdkit.HelpText{
 		Tagline: "Interact with filestore objects.",

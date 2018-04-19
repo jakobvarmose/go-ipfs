@@ -215,7 +215,16 @@ func ColoredSet(ctx context.Context, pn pin.Pinner, ng ipld.NodeGetter, bestEffo
 		return nil, ErrCannotFetchAllLinks
 	}
 
-	return gcs, nil
+	gcs2 := cid.NewSet()
+	err = gcs.ForEach(func(c *cid.Cid) error {
+		gcs2.Add(c.ToPublic())
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return gcs2, nil
 }
 
 // ErrCannotFetchAllLinks is returned as the last Result in the GC output

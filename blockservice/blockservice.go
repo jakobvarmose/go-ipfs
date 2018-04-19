@@ -130,9 +130,13 @@ func NewSession(ctx context.Context, bs BlockService) *Session {
 // AddBlock adds a particular block to the service, Putting it into the datastore.
 // TODO pass a context into this if the remote.HasBlock is going to remain here.
 func (s *blockService) AddBlock(o blocks.Block) error {
+	o, err := o.ToPublic()
+	if err != nil {
+		return err
+	}
 	c := o.Cid()
 	// hash security
-	err := verifcid.ValidateCid(c)
+	err = verifcid.ValidateCid(c)
 	if err != nil {
 		return err
 	}
@@ -157,8 +161,20 @@ func (s *blockService) AddBlock(o blocks.Block) error {
 }
 
 func (s *blockService) AddBlocks(bs []blocks.Block) error {
+	bs2 := make([]blocks.Block, len(bs))
+	for i, b := range bs {
+		if b2, ok := b.(interface{ ToPublic() (blocks.Block, error) }); ok {
+			b2, err := b2.ToPublic()
+			if err != nil {
+				return err
+			}
+			bs2[i] = b2
+		} else {
+			bs2[i] = b
+		}
+	}
 	// hash security
-	for _, b := range bs {
+	for _, b := range bs2 {
 		err := verifcid.ValidateCid(b.Cid())
 		if err != nil {
 			return err
@@ -166,8 +182,8 @@ func (s *blockService) AddBlocks(bs []blocks.Block) error {
 	}
 	var toput []blocks.Block
 	if s.checkFirst {
-		toput = make([]blocks.Block, 0, len(bs))
-		for _, b := range bs {
+		toput = make([]blocks.Block, 0, len(bs2))
+		for _, b := range bs2 {
 			has, err := s.blockstore.Has(b.Cid())
 			if err != nil {
 				return err
@@ -177,7 +193,7 @@ func (s *blockService) AddBlocks(bs []blocks.Block) error {
 			}
 		}
 	} else {
-		toput = bs
+		toput = bs2
 	}
 
 	err := s.blockstore.PutMany(toput)
@@ -209,21 +225,23 @@ func (s *blockService) GetBlock(ctx context.Context, c *cid.Cid) (blocks.Block, 
 }
 
 func getBlock(ctx context.Context, c *cid.Cid, bs blockstore.Blockstore, f exchange.Fetcher) (blocks.Block, error) {
-	err := verifcid.ValidateCid(c) // hash security
+	c2 := c.ToPublic()
+
+	err := verifcid.ValidateCid(c2) // hash security
 	if err != nil {
 		return nil, err
 	}
 
-	block, err := bs.Get(c)
+	block, err := bs.Get(c2)
 	if err == nil {
-		return block, nil
+		return blocks.NewAutoDecryptedBlock(block.RawData(), c)
 	}
 
 	if err == blockstore.ErrNotFound && f != nil {
 		// TODO be careful checking ErrNotFound. If the underlying
 		// implementation changes, this will break.
 		log.Debug("Blockservice: Searching bitswap")
-		blk, err := f.GetBlock(ctx, c)
+		blk, err := f.GetBlock(ctx, c2)
 		if err != nil {
 			if err == blockstore.ErrNotFound {
 				return nil, ErrNotFound
@@ -231,7 +249,8 @@ func getBlock(ctx context.Context, c *cid.Cid, bs blockstore.Blockstore, f excha
 			return nil, err
 		}
 		log.Event(ctx, "BlockService.BlockFetched", c)
-		return blk, nil
+
+		return blocks.NewAutoDecryptedBlock(blk.RawData(), c)
 	}
 
 	log.Debug("Blockservice GetBlock: Not found")
@@ -250,8 +269,15 @@ func (s *blockService) GetBlocks(ctx context.Context, ks []*cid.Cid) <-chan bloc
 }
 
 func getBlocks(ctx context.Context, ks []*cid.Cid, bs blockstore.Blockstore, f exchange.Fetcher) <-chan blocks.Block {
+	ks2 := make([]*cid.Cid, len(ks))
+	mapping := make(map[string]*cid.Cid)
+	for i, c := range ks {
+		ks2[i] = c.ToPublic()
+		mapping[c.ToPublic().KeyString()] = c
+	}
+
 	out := make(chan blocks.Block)
-	for _, c := range ks {
+	for _, c := range ks2 {
 		// hash security
 		if err := verifcid.ValidateCid(c); err != nil {
 			log.Errorf("unsafe CID (%s) passed to blockService.GetBlocks: %s", c, err)
@@ -261,12 +287,18 @@ func getBlocks(ctx context.Context, ks []*cid.Cid, bs blockstore.Blockstore, f e
 	go func() {
 		defer close(out)
 		var misses []*cid.Cid
-		for _, c := range ks {
+		for _, c := range ks2 {
 			hit, err := bs.Get(c)
 			if err != nil {
 				misses = append(misses, c)
 				continue
 			}
+			c2 := mapping[c.KeyString()]
+			hit, err = blocks.NewAutoDecryptedBlock(hit.RawData(), c2)
+			if err != nil {
+				continue
+			}
+
 			select {
 			case out <- hit:
 			case <-ctx.Done():
@@ -285,6 +317,12 @@ func getBlocks(ctx context.Context, ks []*cid.Cid, bs blockstore.Blockstore, f e
 		}
 
 		for b := range rblocks {
+			c2 := mapping[b.Cid().KeyString()]
+			b, err = blocks.NewAutoDecryptedBlock(b.RawData(), c2)
+			if err != nil {
+				continue
+			}
+
 			log.Event(ctx, "BlockService.BlockFetched", b.Cid())
 			select {
 			case out <- b:
@@ -298,7 +336,9 @@ func getBlocks(ctx context.Context, ks []*cid.Cid, bs blockstore.Blockstore, f e
 
 // DeleteBlock deletes a block in the blockservice from the datastore
 func (s *blockService) DeleteBlock(c *cid.Cid) error {
-	err := s.blockstore.DeleteBlock(c)
+	c2 := c.ToPublic()
+
+	err := s.blockstore.DeleteBlock(c2)
 	if err == nil {
 		log.Event(context.TODO(), "BlockService.BlockDeleted", c)
 	}

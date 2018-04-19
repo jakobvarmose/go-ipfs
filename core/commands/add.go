@@ -43,6 +43,7 @@ const (
 	fstoreCacheOptionName = "fscache"
 	cidVersionOptionName  = "cid-version"
 	hashOptionName        = "hash"
+	encryptOptionName     = "encrypt"
 )
 
 const adderOutChanSize = 8
@@ -119,6 +120,7 @@ You can now check what blocks have been created by:
 		cmdkit.BoolOption(fstoreCacheOptionName, "Check the filestore for pre-existing blocks. (experimental)"),
 		cmdkit.IntOption(cidVersionOptionName, "CID version. Defaults to 0 unless an option that depends on CIDv1 is passed. (experimental)"),
 		cmdkit.StringOption(hashOptionName, "Hash function to use. Implies CIDv1 if not sha2-256. (experimental)").WithDefault("sha2-256"),
+		cmdkit.BoolOption(encryptOptionName, "Encrypt with block level encryption. (experimental)").WithDefault(false),
 	},
 	PreRun: func(req *cmds.Request, env cmds.Environment) error {
 		quiet, _ := req.Options[quietOptionName].(bool)
@@ -172,6 +174,9 @@ You can now check what blocks have been created by:
 		fscache, _ := req.Options[fstoreCacheOptionName].(bool)
 		cidVer, cidVerSet := req.Options[cidVersionOptionName].(int)
 		hashFunStr, _ := req.Options[hashOptionName].(string)
+		encrypt, _ := req.Options[encryptOptionName].(bool)
+
+		// FIXME Recursive adding doesn't work. Why?
 
 		// The arguments are subject to the following constraints.
 		//
@@ -233,6 +238,11 @@ You can now check what blocks have been created by:
 
 		prefix.MhType = hashFunCode
 		prefix.MhLength = -1
+
+		if encrypt {
+			prefix.Version = 4
+			prefix.KeyType = 1
+		}
 
 		if hash {
 			nilnode, err := core.NewNode(n.Context(), &core.BuildCfg{

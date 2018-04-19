@@ -34,6 +34,7 @@ var tarAddCmd = &cmds.Command{
 represent it.
 `,
 	},
+	//TODO implement encryption
 
 	Arguments: []cmdkit.Argument{
 		cmdkit.FileArg("file", true, false, "Tar file to add.").EnableStdin(),

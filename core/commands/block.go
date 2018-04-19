@@ -20,12 +20,18 @@ import (
 )
 
 type BlockStat struct {
-	Key  string
-	Size int
+	Key        string
+	Size       int
+	PublicKey  string
+	PublicSize int
 }
 
 func (bs BlockStat) String() string {
-	return fmt.Sprintf("Key: %s\nSize: %d\n", bs.Key, bs.Size)
+	s := fmt.Sprintf("Key: %s\nSize: %d\n", bs.Key, bs.Size)
+	if bs.PublicKey != "" {
+		s += fmt.Sprintf("PublicKey: %s\nPublicSize: %d\n", bs.PublicKey, bs.PublicSize)
+	}
+	return s
 }
 
 var BlockCmd = &cmds.Command{
@@ -69,12 +75,29 @@ on raw IPFS blocks. It outputs the following to stdout:
 			return
 		}
 
-		err = cmds.EmitOnce(res, &BlockStat{
-			Key:  b.Cid().String(),
-			Size: len(b.RawData()),
-		})
+		b2, err := b.ToPublic()
 		if err != nil {
-			log.Error(err)
+			res.SetError(err, cmdkit.ErrNormal)
+			return
+		}
+		if b2 != b {
+			err = cmds.EmitOnce(res, &BlockStat{
+				Key:        b.Cid().String(),
+				Size:       len(b.RawData()),
+				PublicKey:  b2.Cid().String(),
+				PublicSize: len(b2.RawData()),
+			})
+			if err != nil {
+				log.Error(err)
+			}
+		} else {
+			err = cmds.EmitOnce(res, &BlockStat{
+				Key:  b.Cid().String(),
+				Size: len(b.RawData()),
+			})
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	},
 	Type: BlockStat{},
@@ -135,6 +158,7 @@ than 'sha2-256' or format to anything other than 'v0' will result in CIDv1.
 		cmdkit.StringOption("format", "f", "cid format for blocks to be created with."),
 		cmdkit.StringOption("mhtype", "multihash hash function").WithDefault("sha2-256"),
 		cmdkit.IntOption("mhlen", "multihash hash length").WithDefault(-1),
+		cmdkit.BoolOption("encrypt", "create an encrypted block").WithDefault(false),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) {
 		n, err := GetNode(env)
@@ -204,13 +228,17 @@ than 'sha2-256' or format to anything other than 'v0' will result in CIDv1.
 		}
 		pref.MhLength = mhlen
 
-		bcid, err := pref.Sum(data)
-		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
+		encrypt, ok := req.Options["encrypt"].(bool)
+		if !ok {
+			res.SetError("missing option \"mhlen\"", cmdkit.ErrNormal)
 			return
 		}
+		if encrypt {
+			pref.Version = 4
+			pref.KeyType = 1
+		}
 
-		b, err := blocks.NewBlockWithCid(data, bcid)
+		b, err := blocks.NewBlockWithPrefix(data, pref)
 		if err != nil {
 			res.SetError(err, cmdkit.ErrNormal)
 			return

@@ -32,6 +32,8 @@ import (
 	cmds "gx/ipfs/QmfAkMSt9Fwzk48QDJecPcwCUjnf2uG7MLnmCGTp4C6ouL/go-ipfs-cmds"
 )
 
+// TODO implement encryption here
+
 var flog = logging.Logger("cmds/files")
 
 // FilesCmd is the 'ipfs files' command

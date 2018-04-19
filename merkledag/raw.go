@@ -42,11 +42,7 @@ func NewRawNodeWPrefix(data []byte, prefix cid.Prefix) (*RawNode, error) {
 	if prefix.Version == 0 {
 		prefix.Version = 1
 	}
-	c, err := prefix.Sum(data)
-	if err != nil {
-		return nil, err
-	}
-	blk, err := blocks.NewBlockWithCid(data, c)
+	blk, err := blocks.NewBlockWithPrefix(data, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -97,6 +93,10 @@ func (rn *RawNode) Stat() (*ipld.NodeStat, error) {
 		CumulativeSize: len(rn.RawData()),
 		DataSize:       len(rn.RawData()),
 	}, nil
+}
+
+func (n *RawNode) ToPublic() (blocks.Block, error) {
+	return n.Block.ToPublic()
 }
 
 var _ ipld.Node = (*RawNode)(nil)

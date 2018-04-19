@@ -91,12 +91,12 @@ func (n *ProtoNode) EncodeProtobuf(force bool) ([]byte, error) {
 		if n.Prefix.Codec == 0 { // unset
 			n.Prefix = v0CidPrefix
 		}
-		c, err := n.Prefix.Sum(n.encoded)
+		b, err := blocks.NewBlockWithPrefix(n.encoded, n.Prefix)
 		if err != nil {
 			return nil, err
 		}
 
-		n.cached = c
+		n.cached = b
 	}
 
 	return n.encoded, nil
@@ -128,7 +128,7 @@ func DecodeProtobufBlock(b blocks.Block) (ipld.Node, error) {
 		return nil, fmt.Errorf("failed to decode Protocol Buffers: %v", err)
 	}
 
-	decnd.cached = c
+	decnd.cached = b
 	decnd.Prefix = c.Prefix()
 	return decnd, nil
 }
